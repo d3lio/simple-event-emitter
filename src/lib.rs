@@ -135,6 +135,30 @@ mod tests {
         assert_eq!(rx.try_recv(), Err(TryRecvError::Empty));
     }
 
+
+    #[test]
+    fn can_emit_non_clone_payload() {
+        #[derive(Debug, Eq, PartialEq, Hash)]
+        struct A;
+
+        use std::sync::mpsc::{channel, TryRecvError};
+
+        let (sx, rx) = channel();
+        let sx1 = sx.clone();
+        let sx2 = sx.clone();
+
+        let mut emitter = EventEmitter::new();
+        emitter.on("event1", move |payload: &A| sx1.send(payload).unwrap());
+        emitter.on("event2", move |payload: &A| sx2.send(payload).unwrap());
+
+        emitter.emit("event1", &A).unwrap();
+        emitter.emit("event1", &A).unwrap();
+
+        assert_eq!(rx.recv(), Ok(&A));
+        assert_eq!(rx.recv(), Ok(&A));
+        assert_eq!(rx.try_recv(), Err(TryRecvError::Empty));
+    }
+
     #[test]
     fn can_invoke_emit_as_hash_map_get() {
         use std::sync::mpsc::{channel, TryRecvError};
