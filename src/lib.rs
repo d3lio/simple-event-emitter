@@ -12,7 +12,7 @@ pub enum Error {
 
 pub struct Listener<P> {
     id: Id,
-    closure: Box<Fn(P)>
+    closure: Box<dyn Fn(P)>
 }
 
 impl<P> Listener<P> {
